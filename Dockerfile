@@ -22,7 +22,10 @@ RUN microdnf install --nodocs unzip && \
     microdnf remove unzip && \
     microdnf clean all
 
-RUN /usr/share/dependency-check/bin/dependency-check.sh --updateonly
+ARG SKIP_DOWNLOAD=0
+RUN if [ "$SKIP_DOWNLOAD" != "1" ]; then \
+        /usr/share/dependency-check/bin/dependency-check.sh --updateonly; \
+    fi
 
 WORKDIR /usr/share/dependency-check/bin/
 

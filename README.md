@@ -5,14 +5,29 @@ OWASP Dependency-Check workflows in an offline / air-gap environment
 ## Build
 
 ```sh
+# Build image with latest database
 docker build . -t dependency-check
+# Skip database download (useful for downloading database to local filesystem)
+docker build --build-arg SKIP_DOWNLOAD=1 . -t dependency-check
 ```
 
-## Setup Local Dependency-Check Database
+## Setup Initial Local Dependency-Check Database
 
 ```sh
+# Create data directory (Linux)
+DATA_DIRECTORY=$HOME/OWASP-Dependency-Check/data
+mkdir -p $DATA_DIRECTORY
+# Create data directory (Windows)
+set DATA_DIRECTORY=%USERPROFILE%\OWASP-Dependency-Check\data
+mkdir %DATA_DIRECTORY%
+
+# Download database to data directory (for image without database)
+docker run --rm -v %DATA_DIRECTORY%:/usr/share/dependency-check/data dependency-check --updateonly
+
+# Copy database to data directory (for image with database)
 docker run --rm -dit --entrypoint /bin/bash --name dc dependency-check
-docker cp dc:/usr/share/dependency-check/data /data
+docker cp dc:/usr/share/dependency-check/data ./data
+docker rm -f dc
 ```
 
 ## Update Local Dependency-Check Database (Online)
