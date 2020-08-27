@@ -30,13 +30,13 @@ docker cp dc:/usr/share/dependency-check/data ./data
 docker rm -f dc
 ```
 
-## Update Local Dependency-Check Database (Online)
+## Option 1: Update Local Dependency-Check Database (Online)
 
 ```sh
 # Linux
 DATA_DIRECTORY=$HOME/OWASP-Dependency-Check/data
 docker run --rm \
-    --volume %DATA_DIRECTORY%:/usr/share/dependency-check/data \
+    --volume $DATA_DIRECTORY:/usr/share/dependency-check/data \
     dependency-check --updateonly
 
 # Windows
@@ -46,24 +46,37 @@ docker run --rm ^
     dependency-check --updateonly
 ```
 
-## Update Local Dependency-Check Database (Offline / Air-Gap)
+## Option 2: Update Local Dependency-Check Database (Offline / Air-Gap)
+
+To update the database, the following resources needs to be mirrored in air-gap environment.
 
 ### Mirror Resources
 
-* [JS Repo](https://raw.githubusercontent.com/RetireJS/retire.js/master/repository/npmrepository.json)
+* [JS Repo](https://raw.githubusercontent.com/Retirejs/retire.js/master/repository/jsrepository.json)
+
+   ```sh
+   curl -LO https://raw.githubusercontent.com/Retirejs/retire.js/master/repository/jsrepository.json
+   ```
+
 * [NVD from NIST](https://github.com/stevespringett/nist-data-mirror/)
 
-```sh
-java -jar nist-data-mirror.jar <mirror-directory>
-```
+   ```sh
+   # Download latest version of `nist-data-mirror.jar`
+   curl -LO `curl -s -L https://api.github.com/repos/stevespringett/   nist-data-mirror/releases/latest | jq -r '.assets[0].   browser_download_url'`
+
+   # Download *.json.gz and *.meta to nvd directory
+   java -jar nist-data-mirror.jar ./nvd
+   ```
 
 ### Using Mirrored Resources to Update Local Dependency-Check Database
 
 ```sh
 # Linux
 DATA_DIRECTORY=$HOME/OWASP-Dependency-Check/data
+MIRROR_DIRECTORY=$HOME/mirror
 docker run --rm \
   --volume %DATA_DIRECTORY%:/usr/share/dependency-check/data \
+  --volume %MIRROR_DIRECTORY%:/usr/share/mirror \
   dependency-check --updateonly \
   --cveUrlModified file:///usr/share/dc/nvd/nvdcve-1.1-modified.json.gz \
   --cveUrlBase file:///usr/share/dc/nvd/nvdcve-1.1-%d.json.gz \
@@ -71,12 +84,15 @@ docker run --rm \
 
 # Windows
 set DATA_DIRECTORY=%USERPROFILE%\OWASP-Dependency-Check\data
+set MIRROR_DIRECTORY=%USERPROFILE%/mirror
+
 docker run --rm ^
   --volume %DATA_DIRECTORY%:/usr/share/dependency-check/data ^
+  --volume %MIRROR_DIRECTORY%:/usr/share/mirror ^
   dependency-check --updateonly ^
-  --cveUrlModified file:///d:/dc/nvd/nvdcve-1.1-modified.json.gz ^
-  --cveUrlBase file:///d:/dc/nvd/nvdcve-1.1-%d.json.gz ^
-  --retireJsUrl file:///d:/dc/jsrepository.json
+  --cveUrlModified file:///usr/share/mirror/nvd/nvdcve-1.1-modified.json.gz ^
+  --cveUrlBase file:///usr/share/mirror/nvd/nvdcve-1.1-%d.json.gz ^
+  --retireJsUrl file:///usr/share/mirror/jsrepository.json
 ```
 
 ## Reference
