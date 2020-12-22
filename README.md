@@ -62,7 +62,7 @@ To update the database, the following resources needs to be mirrored in air-gap 
 
    ```sh
    # Download latest version of `nist-data-mirror.jar`
-   curl -LO `curl -s -L https://api.github.com/repos/stevespringett/   nist-data-mirror/releases/latest | jq -r '.assets[0].   browser_download_url'`
+   curl -LO `curl -s -L https://api.github.com/repos/stevespringett/nist-data-mirror/releases/latest | jq -r '.assets[2].browser_download_url'`
 
    # Download *.json.gz and *.meta to nvd directory
    java -jar nist-data-mirror.jar ./nvd
